@@ -1,0 +1,97 @@
+﻿@page "/employees/new"
+@using EmpSkillHub.Data.Models
+@using EmpSkillHub.Service.Interfaces
+@inject IEmployeeService EmployeeService
+@inject ISkillService SkillService
+@inject IEmpSkillRepository EmpSkillService
+@inject NavigationManager Navigation
+
+<h3>Add New Employee</h3>
+
+<EditForm Model="employee" OnValidSubmit="HandleValidSubmit">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <div class="mb-3">
+        <label class="form-label">First Name</label>
+        <InputText class="form-control" @bind-Value="employee.FirstName" required />
+    </div>
+    <div class="mb-3">
+        <label class="form-label">Last Name</label>
+        <InputText class="form-control" @bind-Value="employee.LastName" />
+    </div>
+    <div class="mb-3">
+        <label class="form-label">Phone Number</label>
+        <InputText class="form-control" @bind-Value="employee.PhoneNumber" required />
+    </div>
+    <div class="mb-3">
+        <label class="form-label">Address</label>
+        <InputText class="form-control" @bind-Value="employee.Address" />
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Select Skills</label>
+        <select multiple class="form-select" @onchange="OnSkillChange" required>
+            @foreach (var skill in skills)
+            {
+                <option value="@skill.RecId" selected="@SelectedSkillIds.Contains(skill.RecId)">
+                    @skill.Name
+                </option>
+            }
+        </select>
+
+    </div>
+        <button type="submit" class="btn btn-primary">Add Employee</button>
+</EditForm>
+    <br/>
+    <button class="btn btn-primary" @onclick="NavigateToViewEmployees">View All Employee</button>
+
+@if (message != null)
+{
+    <div class="alert alert-success mt-2">@message</div>
+}
+@if (errorMessage != null)
+{
+    <div class="alert alert-success mt-2">@errorMessage</div>
+}
+
+@code {
+    private Employee employee = new Employee();
+    private List<Skill> skills = new List<Skill>();
+    private List<int> SelectedSkillIds = new();
+    private string? message;
+    private string errorMessage;
+
+    private void NavigateToViewEmployees()
+    {
+        Navigation.NavigateTo("/employees");
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        skills = (await SkillService.GetAllSkillsAsync()).ToList();
+    }
+
+    private void OnSkillChange(ChangeEventArgs e)
+    {
+        var selectedOptions = (e.Value as IEnumerable<string>) ?? new[] { e.Value?.ToString() ?? "" };
+        SelectedSkillIds = selectedOptions
+            .Select(int.Parse)
+            .ToList();
+    }
+
+    private async Task HandleValidSubmit()
+    {
+        try
+        {
+            await EmployeeService.AddEmployeeAsync(employee, SelectedSkillIds);
+            message = $"Employee '{employee.FirstName}' added successfully!";
+            employee = new Employee();
+            SelectedSkillIds.Clear();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"An error occurred: {ex.Message}";
+        }
+    }
+}

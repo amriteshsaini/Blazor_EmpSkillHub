@@ -1,0 +1,63 @@
+﻿@page "/employees"
+@using EmpSkillHub.Data.Models
+@using EmpSkillHub.Service.Interfaces
+@inject IEmployeeService EmployeeService
+
+<h3>Employees List</h3>
+<button class="btn btn-primary mb-3" @onclick="NavigateToAddEmployee">Add Employee</button>
+
+@if (employees == null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Phone</th>
+                <th>Skills</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var emp in employees)
+            {
+                <tr>
+                    <td>@emp.FirstName @emp.LastName</td>
+                    <td>@emp.PhoneNumber</td>
+                    <td>@string.Join(", ", emp.EmpSkills.Select(es => es.Skill.Name))</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+
+@if (errorMessage != null)
+{
+    <div class="alert alert-success mt-2">@errorMessage</div>
+}
+@code {
+    [Inject]
+    private NavigationManager Navigation { get; set; } = default!;
+    private List<Employee>? employees;
+    private string errorMessage;
+
+    private void NavigateToAddEmployee()
+    {
+        Navigation.NavigateTo("/employees/new");
+    }
+
+    protected override async Task OnInitializedAsync()
+    {   
+        try
+        {
+            employees = (await EmployeeService.GetAllEmployeesAsync()).ToList();
+        }   
+        catch (Exception ex)
+        {
+            errorMessage = $"An error occurred: {ex.Message}";
+        }
+    }
+}
