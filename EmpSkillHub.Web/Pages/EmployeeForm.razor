@@ -39,6 +39,10 @@
                 </option>
             }
         </select>
+        @if (SelectedSkillIds.Count > MaxSkills)
+        {
+            <div class="alert alert-danger mt-2">You can select a maximum of @MaxSkills skills.</div>
+        }
 
     </div>
         <button type="submit" class="btn btn-primary">Add Employee</button>
@@ -61,6 +65,8 @@
     private List<int> SelectedSkillIds = new();
     private string? message;
     private string errorMessage;
+    private const int MaxSkills = 10;
+
 
     private void NavigateToViewEmployees()
     {
